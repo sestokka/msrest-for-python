@@ -144,6 +144,9 @@ def test_raw_deserializer():
     with pytest.raises(DeserializationError):
         response = build_response(b'{{gibberish}}', content_type="application/xml")
         raw_deserializer.on_response(None, response, stream=False)
+    with pytest.raises(DeserializationError):
+        response = build_response(b'{{gibberish}}', content_type="text/plain")
+        raw_deserializer.on_response(None, response, stream=False)
 
     # Simple JSON
     response = build_response(b'{"success": true}', content_type="application/json")
@@ -177,6 +180,12 @@ def test_raw_deserializer():
     req_response._content_consumed = True
     response = Response(None, RequestsClientResponse(None, req_response))
 
+    raw_deserializer.on_response(None, response, stream=False)
+    result = response.context["deserialized_data"]
+    assert result["success"] is True
+
+    # Simple JSON in text/plain
+    response = build_response(b'{"success": true}', content_type="text/plain; charset=utf-8")
     raw_deserializer.on_response(None, response, stream=False)
     result = response.context["deserialized_data"]
     assert result["success"] is True

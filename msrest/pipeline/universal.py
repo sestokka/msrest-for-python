@@ -200,6 +200,12 @@ class RawDeserializer(SansIOHTTPPolicy):
                 # context otherwise.
                 _LOGGER.critical("Wasn't XML not JSON, failing")
                 raise_with_traceback(DeserializationError, "XML is invalid")
+        elif "text/plain" in content_type:
+            # Server might send json with content-type text/plain. Try JSON load.
+            try:
+                return json.loads(data_as_str)
+            except ValueError as err:
+                raise DeserializationError("JSON is invalid: {}".format(err), err)
         raise DeserializationError("Cannot deserialize content-type: {}".format(content_type))
 
     @classmethod
